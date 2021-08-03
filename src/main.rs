@@ -36,6 +36,8 @@ async fn main() {
 }
 
 fn cpu_load() {
+    println!("=== CPU SIMULATION STARTED ===");
+    println!("\n USING INFINITE LOOP TO GENERATE 100% load on one CPU");
     loop {
         let _: u128 = 100000 * 255745; 
     }
