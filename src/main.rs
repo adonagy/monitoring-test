@@ -9,11 +9,9 @@ use std::fs::File;
 pub mod rpc;
 pub mod configuration;
 
-use curl::easy::{Easy, Handler, WriteError};
+use curl::easy::Easy;
 
 use configuration::MonitoringTestEnvironment;
-
-struct Collector(Vec<u8>);
 
 #[tokio::main]
 async fn main() {
@@ -25,12 +23,8 @@ async fn main() {
         rpc::spawn_rpc_server(port);
         cpu_load()
     } else if let Some(mem_to_use) = env.memory_load {
-        let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
-        rpc::spawn_rpc_server(port);
         memory_load(mem_to_use)
     } else if let Some(network_and_io_load_to_use) = env.network_and_io_load {
-        let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
-        rpc::spawn_rpc_server(port);
         network_and_io_load(network_and_io_load_to_use);
     } else if let Some(cpu_target) = env.test_cpu {
         test_cpu(cpu_target).await;
@@ -50,42 +44,40 @@ fn memory_load(mem_to_use: usize) {
     // u8 should always be a size of 1 Byte
 
     println!("=== MEMORY SIMULATION STARTED ===");
-    println!("    ALLOCATING {} BYTES", mem_to_use);
+    println!("\tALLOCATING {} BYTES", mem_to_use);
 
     let sizeof_bool = mem::size_of::<u8>();
     let count = mem_to_use / sizeof_bool;
     let mut artificial_memory_load: Vec<u8> = Vec::with_capacity(count);
     artificial_memory_load.resize(count, 0);
 
-    println!("    MEMORY LOADED, SLEEPING...");
+    println!("\tMEMORY LOADED, STARTING RPC...");
+    let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
+    rpc::spawn_rpc_server(port);
     sleep(Duration::MAX);
 }
 
 fn network_and_io_load(network_and_io_load_to_use: u64) {
-    impl Handler for Collector {
-        fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
-            self.0.extend_from_slice(data);
-            Ok(data.len())
-        }
-    }
+    println!("=== NETWORK AND IO SIMULATION STARTED ===");
     let mut file = File::create("downloaded.file").unwrap();
 
-    // let mut easy = Easy2::new(Collector(Vec::new()));
     let mut easy = Easy::new();
     easy.get(true).unwrap();
     // TODO: change this to something more appropriate
     easy.url("http://65.21.165.81:8080/rt-kernel/linux-image-5.10.41-rt42-dbg_5.10.41-rt42-1_amd64.deb").unwrap();
     easy.max_recv_speed(network_and_io_load_to_use).unwrap();
     easy.low_speed_limit(network_and_io_load_to_use.try_into().unwrap()).unwrap();
-    println!("Download starting");
+    println!("\tSETUP COMPLETED, STARTING DOWLOAD AND DISK WRITE");
 
     easy.write_function(move |data| {
         file.write_all(data).unwrap();
         Ok(data.len())
     }).unwrap();
 
-    easy.perform().unwrap();
+    let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
+        rpc::spawn_rpc_server(port);
 
+    easy.perform().unwrap();
 }
 
 async fn test_cpu(target: f64) {
@@ -93,13 +85,13 @@ async fn test_cpu(target: f64) {
 
     let error_margin = 2.0;
 
-    println!("   TARGET: {}%", target);
-    println!("   ERROR MARGIN: {}%\n", error_margin);
+    println!("\tTARGET: {}%", target);
+    println!("\tERROR MARGIN: {}%\n", error_margin);
 
-    let res = get_latest_measurement().await;
+    let res = get_latest_measurement(tokio::time::Duration::from_secs(0)).await;
 
     if let Some(cpu_data) = res[0]["cpu"]["node"]["collective"].as_f64() {
-        println!("   CPU at: {}%\n", cpu_data);
+        println!("\tCPU at: {}%\n", cpu_data);
 
         // Make sure the measurement is withing the defined interval (with the error margin)
         assert!(target + error_margin >= cpu_data);
@@ -119,14 +111,14 @@ async fn test_memory(target: u64) {
     // 30 MB
     let error_margin = 31_457_280;
 
-    println!("   TARGET: {}MB", bytes_to_megabytes(target));
-    println!("   ERROR MARGIN: {}MB\n", bytes_to_megabytes(error_margin));
+    println!("\tTARGET: {}MB", bytes_to_megabytes(target));
+    println!("\tERROR MARGIN: {}MB\n", bytes_to_megabytes(error_margin));
 
-    let res = get_latest_measurement().await;
+    let res = get_latest_measurement(tokio::time::Duration::from_secs(0)).await;
 
     if let Some(memory_data) = res[0]["memory"]["node"].as_u64() {
         // DEBUG
-        println!("   Memory at: {}MB\n", bytes_to_megabytes(memory_data));
+        println!("\tMemory at: {}MB\n", bytes_to_megabytes(memory_data));
         assert!(target + error_margin >= memory_data);
         assert!(target - error_margin <= memory_data);
 
@@ -144,14 +136,14 @@ async fn test_network_and_io(target: u64) {
     // 30 KB/s
     let error_margin = 30_720;
 
-    println!("   TARGET: {}KB/s", bytes_to_kilobytes(target));
-    println!("   ERROR MARGIN: {}KB/s\n", bytes_to_kilobytes(error_margin));
+    println!("\tTARGET: {}KB/s", bytes_to_kilobytes(target));
+    println!("\tERROR MARGIN: {}KB/s\n", bytes_to_kilobytes(error_margin));
 
-    let res = get_latest_measurement().await;
+    let res = get_latest_measurement(tokio::time::Duration::from_secs(5)).await;
 
     if let Some(io_data) = res[0]["io"]["node"]["writtenBytesPerSec"].as_u64() {
         // DEBUG
-        println!("   DISK WRITE at: {}KB/s\n", bytes_to_kilobytes(io_data));
+        println!("\tDISK WRITE at: {}KB/s\n", bytes_to_kilobytes(io_data));
         assert!(target + error_margin >= io_data);
         assert!(target - error_margin <= io_data);
 
@@ -165,12 +157,12 @@ async fn test_network_and_io(target: u64) {
 
 
     let error_margin = 61_440;
-    println!("   TARGET: {}KB/s", bytes_to_kilobytes(target));
-    println!("   ERROR MARGIN: {}KB/s\n", bytes_to_kilobytes(error_margin));
+    println!("\tTARGET: {}KB/s", bytes_to_kilobytes(target));
+    println!("\tERROR MARGIN: {}KB/s\n", bytes_to_kilobytes(error_margin));
 
     if let Some(network_data) = res[0]["network"]["receivedBytesPerSec"].as_u64() {
         // DEBUG
-        println!("   NETWORK RECIEVED at: {}KB/s\n", bytes_to_kilobytes(network_data));
+        println!("\tNETWORK RECIEVED at: {}KB/s\n", bytes_to_kilobytes(network_data));
         assert!(target + error_margin >= network_data);
         assert!(target - error_margin <= network_data);
 
@@ -181,16 +173,25 @@ async fn test_network_and_io(target: u64) {
     }
 }
 
-async fn get_latest_measurement() -> serde_json::Value {
-    match reqwest::get(
-        "http://127.0.0.1:38732/resources/tezedge?limit=1"
-    ).await
-    {
-        Ok(result) => return result.json().await.unwrap_or_default(),
-        Err(e) => {
-            panic!("Measurement request error: {}", e);
-        }
-    };
+async fn get_latest_measurement(delay: tokio::time::Duration) -> serde_json::Value {
+    let retries = 100;
+
+    // Network for example needs a few seconds to stabilize on the download speed, so get later measuremnt
+    tokio::time::sleep(delay).await;
+
+    for _ in 0..retries {
+        match reqwest::get(
+            "http://127.0.0.1:38732/resources/tezedge?limit=1"
+        ).await
+        {
+            Ok(result) => return result.json().await.unwrap_or_default(),
+            Err(_) => {
+                println!("\tMonitoring not yet ready, retrying in 5s");
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await
+            }
+        };
+    }
+    serde_json::Value::default()
 }
 
 fn bytes_to_megabytes(bytes: u64) -> u64 {
