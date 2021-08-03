@@ -36,7 +36,9 @@ async fn main() {
 }
 
 fn cpu_load() {
-    loop {}
+    loop {
+        let _: u128 = 100000 * 255745; 
+    }
 }
 
 fn memory_load(mem_to_use: usize) {
