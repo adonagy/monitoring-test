@@ -1,32 +1,38 @@
+use prctl;
 use std::env;
 use std::path::PathBuf;
-use prctl;
 
-pub mod rpc;
 pub mod configuration;
-pub mod tests;
 pub mod loads;
+pub mod rpc;
+pub mod tests;
 
-use configuration::MonitoringTestEnvironment;
 use crate::loads::*;
 use crate::tests::*;
+use configuration::MonitoringTestEnvironment;
 
 #[tokio::main]
 async fn main() {
-
     let env = MonitoringTestEnvironment::from_args();
 
-    let volume_path = env::var("VOLUME_PATH").unwrap_or("/tmp/tezedge".to_string()).parse::<PathBuf>().unwrap();
+    let volume_path = env::var("VOLUME_PATH")
+        .unwrap_or("/tmp/tezedge".to_string())
+        .parse::<PathBuf>()
+        .unwrap();
 
     if let Some(process_name) = env.process_name {
-        prctl::set_name(&process_name).expect(&format!("Cannot change proces name to {}", process_name));
+        prctl::set_name(&process_name)
+            .expect(&format!("Cannot change proces name to {}", process_name));
     }
-    
+
     if env.cpu_load {
         cpu_load(env.disable_rpc_server);
         // cpu_load_on_threads();
         if !env.disable_rpc_server {
-            let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
+            let port = env::var("RPC_PORT")
+                .unwrap_or("18732".to_string())
+                .parse::<u16>()
+                .unwrap();
             rpc::spawn_rpc_server(port);
         }
         // cpu_load(env.disable_rpc_server);
@@ -45,7 +51,10 @@ async fn main() {
         cpu_load_sub_process();
         // cpu_load_on_threads();
         if !env.disable_rpc_server {
-            let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
+            let port = env::var("RPC_PORT")
+                .unwrap_or("18732".to_string())
+                .parse::<u16>()
+                .unwrap();
             rpc::spawn_rpc_server(port);
         }
         tokio::time::sleep(tokio::time::Duration::MAX).await;
