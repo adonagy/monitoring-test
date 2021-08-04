@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+
+  node-simulator:
+    image: local/monitoring-test:latest
+    build: .
+    command: ["--cpu-load"]
+    pid: host
+    network_mode: host
+  
+  monitoring:
+    image: tezedge/node-monitoring:latest
+    command: ["--resource-monitor-interval", "1", "--tezedge-nodes", "tezedge:18732:/tmp/tezedge", "--wait-for-nodes"]
+    pid: host
+    network_mode: host
+    depends_on: 
+      - node-simulator
+    volumes:
+      - "tezedge-data:/tmp/tezedge"
+
+  test:
+    image: local/monitoring-test:latest
+    build: .
+    command: ["--test-cpu", "100.0"]
+    depends_on: 
+      - monitoring
+    pid: host
+    network_mode: host
+
+volumes:
+  tezedge-data:
+    external: false

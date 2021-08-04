@@ -13,6 +13,12 @@ pub struct MonitoringTestEnvironment {
     pub test_memory: Option<u64>,
 
     pub test_network_and_io: Option<u64>,
+
+    pub disable_rpc_server: bool,
+
+    pub cpu_load_with_subprocess: bool,
+
+    pub process_name: Option<String>,
 }
 
 impl MonitoringTestEnvironment {
@@ -22,6 +28,13 @@ impl MonitoringTestEnvironment {
 
         Self {
             cpu_load: args.is_present("cpu-load"),
+            disable_rpc_server: args.is_present("disable-rpc-server"),
+            cpu_load_with_subprocess: args.is_present("cpu-load-with-subprocess"),
+            process_name: args
+                .value_of("process-name")
+                .map(|process_name| {
+                    process_name.to_string()
+                }),
             memory_load: args
                 .value_of("memory-load")
                 .map(|memory_load| {
@@ -68,9 +81,26 @@ fn monitoring_test_app() -> App<'static, 'static> {
         .author("SimpleStaking and the project contributors")
         .setting(clap::AppSettings::AllArgsOverrideSelf)
         .arg(
+            Arg::with_name("disable-rpc-server")
+                .long("disable-rpc-server")
+                .help("Launches the app with RPC server")
+        )
+        .arg(
+            Arg::with_name("process-name")
+                .long("process-name")
+                .takes_value(true)
+                .value_name("STRING")
+                .help("Sets the process' name")
+        )
+        .arg(
             Arg::with_name("cpu-load")
                 .long("cpu-load")
                 .help("Launches the app with 100% cpu load")
+        )
+        .arg(
+            Arg::with_name("cpu-load-with-subprocess")
+                .long("cpu-load-with-subprocess")
+                .help("Launches the app with 100% cpu load and a subprocess with also 100% cpu load")
         )
         .arg(
             Arg::with_name("memory-load")
