@@ -117,7 +117,7 @@ pub async fn test_disk_size(target: u64) {
     println!("\tTARGET: {}MB", bytes_to_megabytes(target));
     println!("\tERROR MARGIN: {}MB\n", bytes_to_megabytes(error_margin));
 
-    let res = get_latest_measurement(Duration::from_secs(5)).await;
+    let res = get_latest_measurement(Duration::from_secs(0)).await;
 
     if let Some(diks_data) = res[0]["disk"]["contextActions"].as_u64() {
         println!(
