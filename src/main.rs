@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 use prctl;
 
 pub mod rpc;
@@ -15,13 +16,15 @@ async fn main() {
 
     let env = MonitoringTestEnvironment::from_args();
 
+    let volume_path = env::var("VOLUME_PATH").unwrap_or("/tmp/tezedge".to_string()).parse::<PathBuf>().unwrap();
+
     if let Some(process_name) = env.process_name {
         prctl::set_name(&process_name).expect(&format!("Cannot change proces name to {}", process_name));
     }
     
     if env.cpu_load {
-        // cpu_load()
-        cpu_load_on_threads();
+        cpu_load(env.disable_rpc_server);
+        // cpu_load_on_threads();
         if !env.disable_rpc_server {
             let port = env::var("RPC_PORT").unwrap_or("18732".to_string()).parse::<u16>().unwrap();
             rpc::spawn_rpc_server(port);
@@ -46,5 +49,9 @@ async fn main() {
             rpc::spawn_rpc_server(port);
         }
         tokio::time::sleep(tokio::time::Duration::MAX).await;
+    } else if let Some(disk_target) = env.disk_load {
+        disk_load(disk_target, volume_path);
+    } else if let Some(target) = env.test_disk {
+        test_disk_size(target).await;
     }
 }

@@ -8,11 +8,15 @@ pub struct MonitoringTestEnvironment {
 
     pub network_and_io_load: Option<u64>,
 
+    pub disk_load: Option<u64>,
+
     pub test_cpu: Option<f64>,
 
     pub test_memory: Option<u64>,
 
     pub test_network_and_io: Option<u64>,
+    
+    pub test_disk: Option<u64>,
 
     pub disable_rpc_server: bool,
 
@@ -40,6 +44,13 @@ impl MonitoringTestEnvironment {
                 .map(|memory_load| {
                     memory_load
                         .parse::<usize>()
+                        .expect("Was expecting NUM [usize]")
+                }),
+            disk_load: args
+                .value_of("disk-load")
+                .map(|disk_load| {
+                    disk_load
+                        .parse::<u64>()
                         .expect("Was expecting NUM [u64]")
                 }),
             network_and_io_load: args
@@ -58,6 +69,13 @@ impl MonitoringTestEnvironment {
                 }),
             test_memory: args
                 .value_of("test-memory")
+                .map(|target| {
+                    target
+                        .parse::<u64>()
+                        .expect("Was expecting NUM [u64]")
+                }),
+            test_disk: args
+                .value_of("test-disk")
                 .map(|target| {
                     target
                         .parse::<u64>()
@@ -107,7 +125,14 @@ fn monitoring_test_app() -> App<'static, 'static> {
                 .long("memory-load")
                 .takes_value(true)
                 .value_name("NUM")
-                .help("Launches the app with the hardcoded load")
+                .help("Launches the app with the provided memory load in GB")
+        )
+        .arg(
+            Arg::with_name("disk-load")
+                .long("disk-load")
+                .takes_value(true)
+                .value_name("NUM")
+                .help("Launches the app with the provided disk load in GB")
         )
         .arg(
             Arg::with_name("network-and-io-load")
@@ -121,21 +146,28 @@ fn monitoring_test_app() -> App<'static, 'static> {
                 .long("test-cpu")
                 .takes_value(true)
                 .value_name("FLOAT")
-                .help("Launches test to assert cpu measurent")
+                .help("Launches test to assert cpu measurement")
         )
         .arg(
             Arg::with_name("test-memory")
                 .long("test-memory")
                 .takes_value(true)
                 .value_name("NUM")
-                .help("Launches test to assert memory measurent")
+                .help("Launches test to assert memory measurement")
+        )
+        .arg(
+            Arg::with_name("test-disk")
+                .long("test-disk")
+                .takes_value(true)
+                .value_name("NUM")
+                .help("Launches test to assert diks measurement")
         )
         .arg(
             Arg::with_name("test-networking-and-io")
                 .long("test-networking-and-io")
                 .takes_value(true)
                 .value_name("NUM")
-                .help("Launches test to assert networking and io measurent")
+                .help("Launches test to assert networking and io measurement")
         );
     app
 }

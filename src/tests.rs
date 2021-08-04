@@ -105,6 +105,63 @@ pub async fn test_network_and_io(target: u64) {
     }
 }
 
+pub async fn test_disk_size(target: u64) {
+    println!("=== TESTING DISK SIZE ===\n\n");
+
+    // 30 KB
+    let error_margin = 30_720;
+
+    println!("\tTARGET: {}MB", bytes_to_megabytes(target));
+    println!("\tERROR MARGIN: {}MB\n", bytes_to_megabytes(error_margin));
+
+    let res = get_latest_measurement(Duration::from_secs(5)).await;
+
+    if let Some(diks_data) = res[0]["disk"]["contextActions"].as_u64() {
+        println!("\tcontextActions SIZE at: {}MB\n", bytes_to_megabytes(diks_data));
+        assert!(target + error_margin >= diks_data);
+        assert!(target - error_margin <= diks_data);
+
+        println!("=== OK ===\n");
+
+    } else {
+        panic!("Test failed: contextActions data not found in measurements")
+    }
+
+    if let Some(diks_data) = res[0]["disk"]["contextIrmin"].as_u64() {
+        println!("\tcontextIrmin SIZE at: {}MB\n", bytes_to_megabytes(diks_data));
+        assert!(target + error_margin >= diks_data);
+        assert!(target - error_margin <= diks_data);
+
+        println!("=== OK ===\n");
+
+    } else {
+        panic!("Test failed: contextIrmin data not found in measurements")
+    }
+
+    if let Some(diks_data) = res[0]["disk"]["blockStorage"].as_u64() {
+        println!("\tblockStorage SIZE at: {}MB\n", bytes_to_megabytes(diks_data));
+        assert!(target + error_margin >= diks_data);
+        assert!(target - error_margin <= diks_data);
+
+        println!("=== OK ===\n");
+
+    } else {
+        panic!("Test failed: blockStorage data not found in measurements")
+    }
+
+    if let Some(diks_data) = res[0]["disk"]["mainDb"].as_u64() {
+        println!("\tmainDb SIZE at: {}MB\n", bytes_to_megabytes(diks_data));
+        assert!(target + error_margin >= diks_data);
+        assert!(target - error_margin <= diks_data);
+
+        println!("=== OK ===\n");
+
+    } else {
+        panic!("Test failed: mainDb data not found in measurements")
+    }
+
+}
+
 pub async fn get_latest_measurement(delay: Duration) -> serde_json::Value {
     let retries = 100;
 
