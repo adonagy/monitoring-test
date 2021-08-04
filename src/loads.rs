@@ -94,7 +94,7 @@ pub fn cpu_load_on_threads() {
 
 pub fn cpu_load_sub_process() {
     println!("\tSTARTING SUBRPOCESS");
-    Command::new("target/debug/monitoring-test")
+    Command::new("/monitoring-test")
         .args(&[
             "--cpu-load",
             "--disable-rpc-server",
@@ -107,7 +107,7 @@ pub fn cpu_load_sub_process() {
 
 pub fn memory_load_sub_process(target: usize) {
     println!("\tSTARTING SUBRPOCESS");
-    Command::new("target/debug/monitoring-test")
+    Command::new("/monitoring-test")
         .args(&[
             "--memory-load",
             &target.to_string(),
