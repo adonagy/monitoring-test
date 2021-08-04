@@ -5,12 +5,8 @@ use serde_json;
 use warp::http::StatusCode;
 use warp::reject;
 
-// const DUMMY_HEADER: &'static str = r#"{"hash":"BM2EMxsQsjCqud7g3VKE4qK8hXwpjnqjUWUHqNtDtwwVcD5cm1c","chain_id":"NetXxkAx4woPLyu","level":2,"proto":1,"predecessor":"BMAP2ZWJAhqCidHvTAxZ9d3vaL9winSaPQ7tnnbjEoAB59uzdAF","timestamp":"2021-03-04T20:02:09Z","validation_pass":4,"operations_hash":"LLoa7bxRTKaQN2bLYoitYB6bU2DvLnBAqrVjZcvJ364cTcX2PZYKU","fitness":["01","0000000000000001"],"context":"CoV3UQeXxNiWY4HT5KUoQbjYzEEGnKvKwg4X1rNtrwzZVSeZp3vU","protocol":"PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i","signature":"sigPKUeqqrL3NBqz5AMwjRt6BESvkoPm8Tv84UKvY4NF2MThLrSzjBhUouPJreCrkcvVv6uXhZ1YKiZVW9jjBCKYaHxwVYhK","priority":0,"proof_of_work_nonce":"08351e3dc4590300"}"#;
-//
-
 pub fn filters() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // Allow cors from any origin
-
     let cors = warp::cors()
         .allow_any_origin()
         .allow_headers(vec!["content-type"])

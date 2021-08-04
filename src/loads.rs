@@ -20,7 +20,7 @@ pub fn cpu_load(disable_rpc_server: bool) {
         let port = env::var("RPC_PORT")
             .unwrap_or("18732".to_string())
             .parse::<u16>()
-            .unwrap();
+            .expect("Expected u16");
         rpc::spawn_rpc_server(port);
     }
     loop {
@@ -42,10 +42,11 @@ pub fn memory_load(mem_to_use: usize, disable_rpc_server: bool) {
 
     println!("\tMEMORY LOADED, STARTING RPC...");
     if !disable_rpc_server {
+        memory_load_sub_process(mem_to_use);
         let port = env::var("RPC_PORT")
             .unwrap_or("18732".to_string())
             .parse::<u16>()
-            .unwrap();
+            .expect("Expected u16");
         rpc::spawn_rpc_server(port);
     }
     sleep(Duration::MAX);
@@ -53,35 +54,35 @@ pub fn memory_load(mem_to_use: usize, disable_rpc_server: bool) {
 
 pub fn network_and_io_load(network_and_io_load_to_use: u64, disable_rpc_server: bool) {
     println!("=== NETWORK AND IO SIMULATION STARTED ===\n");
-    let mut file = File::create("downloaded.file").unwrap();
+    let mut file = File::create("downloaded.file").expect("Cannot create file");
 
     let mut easy = Easy::new();
-    easy.get(true).unwrap();
+    easy.get(true).expect("Cannot set easy to get request");
     // TODO: change this to something more appropriate
     easy.url(
         "http://65.21.165.81:8080/rt-kernel/linux-image-5.10.41-rt42-dbg_5.10.41-rt42-1_amd64.deb",
     )
-    .unwrap();
-    easy.max_recv_speed(network_and_io_load_to_use).unwrap();
+    .expect("Cannot set url");
+    easy.max_recv_speed(network_and_io_load_to_use).expect("Cannot set max bandwidth");
     easy.low_speed_limit(network_and_io_load_to_use.try_into().unwrap())
-        .unwrap();
+        .expect("Cannot set min bandwidth");
     println!("\tSETUP COMPLETED, STARTING DOWLOAD AND DISK WRITE");
 
     easy.write_function(move |data| {
         file.write_all(data).unwrap();
         Ok(data.len())
     })
-    .unwrap();
+    .expect("Cannot set write function");
 
     if !disable_rpc_server {
         let port = env::var("RPC_PORT")
             .unwrap_or("18732".to_string())
             .parse::<u16>()
-            .unwrap();
+            .expect("Expected u16");
         rpc::spawn_rpc_server(port);
     }
 
-    easy.perform().unwrap();
+    easy.perform().expect("Cannot preform request")
 }
 
 pub fn cpu_load_on_threads() {
@@ -92,9 +93,24 @@ pub fn cpu_load_on_threads() {
 }
 
 pub fn cpu_load_sub_process() {
+    println!("\tSTARTING SUBRPOCESS");
     Command::new("target/debug/monitoring-test")
         .args(&[
             "--cpu-load",
+            "--disable-rpc-server",
+            "--process-name",
+            "protocol-runner",
+        ])
+        .spawn()
+        .expect("Cannot run subprocess");
+}
+
+pub fn memory_load_sub_process(target: usize) {
+    println!("\tSTARTING SUBRPOCESS");
+    Command::new("target/debug/monitoring-test")
+        .args(&[
+            "--memory-load",
+            &target.to_string(),
             "--disable-rpc-server",
             "--process-name",
             "protocol-runner",
@@ -169,7 +185,7 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
     let port = env::var("RPC_PORT")
         .unwrap_or("18732".to_string())
         .parse::<u16>()
-        .unwrap();
+        .expect("Expected u16");
     rpc::spawn_rpc_server(port);
 
     sleep(Duration::MAX);

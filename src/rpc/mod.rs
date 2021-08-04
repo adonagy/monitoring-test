@@ -1,7 +1,6 @@
 use tokio::task::JoinHandle;
 
 pub mod filters;
-pub mod handlers;
 
 pub const MEASUREMENTS_MAX_CAPACITY: usize = 40320;
 

@@ -18,7 +18,7 @@ async fn main() {
     let volume_path = env::var("VOLUME_PATH")
         .unwrap_or("/tmp/tezedge".to_string())
         .parse::<PathBuf>()
-        .unwrap();
+        .expect("Expected PATH");
 
     if let Some(process_name) = env.process_name {
         prctl::set_name(&process_name)
@@ -26,16 +26,18 @@ async fn main() {
     }
 
     if env.cpu_load {
-        cpu_load(env.disable_rpc_server);
-        // cpu_load_on_threads();
+        // launch a thread with 100% load (this also loads the main process to 100%)
+        cpu_load_on_threads();
         if !env.disable_rpc_server {
+            // the rpc server is disabled only when a subprocess is run, so run the subprocess here
+            // this allows us to test every aspect of the cpu measurements (collective, thread, subprocess)
+            cpu_load_sub_process();
             let port = env::var("RPC_PORT")
                 .unwrap_or("18732".to_string())
                 .parse::<u16>()
-                .unwrap();
+                .expect("Expected u16");
             rpc::spawn_rpc_server(port);
         }
-        // cpu_load(env.disable_rpc_server);
         tokio::time::sleep(tokio::time::Duration::MAX).await;
     } else if let Some(mem_to_use) = env.memory_load {
         memory_load(mem_to_use, env.disable_rpc_server)
@@ -54,7 +56,7 @@ async fn main() {
             let port = env::var("RPC_PORT")
                 .unwrap_or("18732".to_string())
                 .parse::<u16>()
-                .unwrap();
+                .expect("Expected u16");
             rpc::spawn_rpc_server(port);
         }
         tokio::time::sleep(tokio::time::Duration::MAX).await;

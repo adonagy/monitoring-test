@@ -21,6 +21,27 @@ pub async fn test_cpu(target: f64) {
         panic!("Test failed: No cpu data found in measurements")
     }
 
+    if let Some(subprocess) = res[0]["cpu"]["validators"]["validators"].as_object() {
+        if let Some(key) = subprocess
+            .keys()
+            .filter(|key| key.contains("protocol-runner"))
+            .next()
+        {
+            if let Some(thread_cpu) = subprocess.get(key).unwrap()["collective"].as_f64() {
+                println!("\tPROTOCOL RUNNER CPU at: {}%\n", thread_cpu);
+                // Make sure the measurement is withing the defined interval (with the error margin)
+                assert!(target + error_margin >= thread_cpu);
+                assert!(target - error_margin <= thread_cpu);
+
+                println!("=== OK ===\n");
+            }
+        } else {
+            panic!("No subprocess found")
+        }
+    } else {
+        panic!("Test failed: No subprocess data found in cpu measurements")
+    }
+
     if let Some(tasks) = res[0]["cpu"]["node"]["taskThreads"].as_object() {
         if let Some(key) = tasks
             .keys()
@@ -62,7 +83,28 @@ pub async fn test_memory(target: u64) {
 
         println!("=== OK ===\n");
     } else {
-        panic!("Test failed: No cpu data found in measurements")
+        panic!("Test failed: No memory data found in measurements")
+    }
+
+    if let Some(subprocesses) = res[0]["memory"]["validators"]["validators"].as_object() {
+        if let Some(key) = subprocesses
+            .keys()
+            .filter(|key| key.contains("protocol-runner"))
+            .next()
+        {
+            if let Some(subprocess_memory) = subprocesses.get(key).unwrap().as_u64() {
+                println!("\tSUBPROCESS MEMORY at: {}MB\n", bytes_to_megabytes(subprocess_memory));
+                // Make sure the measurement is withing the defined interval (with the error margin)
+                assert!(target + error_margin >= subprocess_memory);
+                assert!(target - error_margin <= subprocess_memory);
+
+                println!("=== OK ===\n");
+            }
+        } else {
+            panic!("No subprocess found")
+        }
+    } else {
+        panic!("Test failed: No subprocess memory data found in measurements")
     }
 }
 
