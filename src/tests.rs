@@ -3,7 +3,7 @@ use tokio::time::{sleep, Duration};
 pub async fn test_cpu(target: f64) {
     println!("=== TESTING NODE CPU MEASUREMENTS ===\n\n");
 
-    let error_margin = 2.0;
+    let error_margin = 5.0;
 
     println!("\tTARGET: {}%", target);
     println!("\tERROR MARGIN: {}%\n", error_margin);
