@@ -132,7 +132,7 @@ pub async fn test_network_and_io(target: u64) {
 
     println!("=== TESTING NODE NETWORKING ===\n\n");
 
-    let error_margin = 61_440;
+    let error_margin = 102_400;
     println!("\tTARGET: {}KB/s", bytes_to_kilobytes(target));
     println!("\tERROR MARGIN: {}KB/s\n", bytes_to_kilobytes(error_margin));
 
