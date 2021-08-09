@@ -11,7 +11,7 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain ${rust_toolcha
 ENV PATH=/root/.cargo/bin:$PATH
 ENV SODIUM_USE_PKG_CONFIG=1
 RUN apt-get install -y clang libclang-dev
-RUN git clone ${repository} --branch ${SOURCE_BRANCH-master} && cd monitoring-test && cargo build --release #8
+RUN git clone ${repository} --branch ${SOURCE_BRANCH-master} && cd monitoring-test && cargo build --release #11
 
 FROM debian:10-slim
 

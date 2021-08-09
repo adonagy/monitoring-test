@@ -3,7 +3,7 @@ use tokio::time::{sleep, Duration};
 pub async fn test_cpu(target: f64) {
     println!("=== TESTING NODE CPU MEASUREMENTS ===\n\n");
 
-    let error_margin = 5.0;
+    let error_margin = 10.0;
 
     println!("\tTARGET: {}%", target);
     println!("\tERROR MARGIN: {}%\n", error_margin);
@@ -23,9 +23,7 @@ pub async fn test_cpu(target: f64) {
 
     if let Some(subprocess) = res[0]["cpu"]["validators"]["validators"].as_object() {
         if let Some(key) = subprocess
-            .keys()
-            .filter(|key| key.contains("protocol-runner"))
-            .next()
+            .keys().find(|key| key.contains("protocol-runner"))
         {
             if let Some(thread_cpu) = subprocess.get(key).unwrap()["collective"].as_f64() {
                 println!("\tPROTOCOL RUNNER CPU at: {}%\n", thread_cpu);
@@ -44,9 +42,7 @@ pub async fn test_cpu(target: f64) {
 
     if let Some(tasks) = res[0]["cpu"]["node"]["taskThreads"].as_object() {
         if let Some(key) = tasks
-            .keys()
-            .filter(|key| key.contains("test_thread"))
-            .next()
+            .keys().find(|key| key.contains("test_thread"))
         {
             if let Some(thread_cpu) = tasks.get(key).unwrap().as_f64() {
                 println!("\tTHREAD CPU at: {}%\n", thread_cpu);
@@ -88,9 +84,7 @@ pub async fn test_memory(target: u64) {
 
     if let Some(subprocesses) = res[0]["memory"]["validators"]["validators"].as_object() {
         if let Some(key) = subprocesses
-            .keys()
-            .filter(|key| key.contains("protocol-runner"))
-            .next()
+            .keys().find(|key| key.contains("protocol-runner"))
         {
             if let Some(subprocess_memory) = subprocesses.get(key).unwrap().as_u64() {
                 println!("\tSUBPROCESS MEMORY at: {}MB\n", bytes_to_megabytes(subprocess_memory));

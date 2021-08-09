@@ -18,7 +18,7 @@ pub fn cpu_load(disable_rpc_server: bool) {
     println!("\tUSING INFINITE LOOP TO GENERATE 100% load on one CPU");
     if !disable_rpc_server {
         let port = env::var("RPC_PORT")
-            .unwrap_or("18732".to_string())
+            .unwrap_or_else(|_| "18732".to_string())
             .parse::<u16>()
             .expect("Expected u16");
         rpc::spawn_rpc_server(port);
@@ -44,7 +44,7 @@ pub fn memory_load(mem_to_use: usize, disable_rpc_server: bool) {
     if !disable_rpc_server {
         memory_load_sub_process(mem_to_use);
         let port = env::var("RPC_PORT")
-            .unwrap_or("18732".to_string())
+            .unwrap_or_else(|_| "18732".to_string())
             .parse::<u16>()
             .expect("Expected u16");
         rpc::spawn_rpc_server(port);
@@ -76,7 +76,7 @@ pub fn network_and_io_load(network_and_io_load_to_use: u64, disable_rpc_server: 
 
     if !disable_rpc_server {
         let port = env::var("RPC_PORT")
-            .unwrap_or("18732".to_string())
+            .unwrap_or_else(|_| "18732".to_string())
             .parse::<u16>()
             .expect("Expected u16");
         rpc::spawn_rpc_server(port);
@@ -125,20 +125,17 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
 
     if Path::new(&volume_path).exists() {
         fs::remove_dir_all(&volume_path)
-            .expect(&format!("Failed to remove directory: {:?}", &volume_path));
+            .unwrap_or_else(|_| panic!("Failed to remove directory: {:?}", &volume_path));
         fs::create_dir_all(&volume_path)
-            .expect(&format!("Failed to create directory: {:?}", &volume_path));
+            .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &volume_path));
     } else {
         fs::create_dir_all(&volume_path)
-            .expect(&format!("Failed to create directory: {:?}", &volume_path));
+            .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &volume_path));
     }
 
     println!("\tCREATING CONTEXT ACTIONS DB");
     let context_actions = volume_path.join("bootstrap_db/context_actions");
-    fs::create_dir_all(&context_actions).expect(&format!(
-        "Failed to create directory: {:?}",
-        &context_actions
-    ));
+    fs::create_dir_all(&context_actions).unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_actions));
 
     let context_file =
         fs::File::create(context_actions.join("dummy.db")).expect("Failed to create context file");
@@ -149,7 +146,7 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
     println!("\tCREATING IRMIN CONTEXT DB");
     let context_irmin = volume_path.join("context");
     fs::create_dir_all(&context_irmin)
-        .expect(&format!("Failed to create directory: {:?}", &context_irmin));
+        .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_irmin));
 
     let context_irmin_file = fs::File::create(context_irmin.join("dummy.db"))
         .expect("Failed to create context_irmin_file");
@@ -160,7 +157,7 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
     println!("\tCREATING BLOCK STORAGE DB");
     let block_storage = volume_path.join("bootstrap_db/block_storage");
     fs::create_dir_all(&block_storage)
-        .expect(&format!("Failed to create directory: {:?}", &block_storage));
+        .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &block_storage));
 
     let block_storage_file = fs::File::create(block_storage.join("dummy.db"))
         .expect("Failed to create block_storage_file");
@@ -170,10 +167,7 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
 
     println!("\tCREATING MAIN DB");
     let main_db_storage = volume_path.join("bootstrap_db/db");
-    fs::create_dir_all(&main_db_storage).expect(&format!(
-        "Failed to create directory: {:?}",
-        &main_db_storage
-    ));
+    fs::create_dir_all(&main_db_storage).unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &main_db_storage));
 
     let main_db_file =
         fs::File::create(main_db_storage.join("dummy.db")).expect("Failed to create main_db_file");
@@ -183,7 +177,7 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
 
     // launch rpc port
     let port = env::var("RPC_PORT")
-        .unwrap_or("18732".to_string())
+        .unwrap_or_else(|_| "18732".to_string())
         .parse::<u16>()
         .expect("Expected u16");
     rpc::spawn_rpc_server(port);

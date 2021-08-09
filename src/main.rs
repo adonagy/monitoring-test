@@ -1,4 +1,4 @@
-use prctl;
+
 use std::env;
 use std::path::PathBuf;
 
@@ -16,13 +16,13 @@ async fn main() {
     let env = MonitoringTestEnvironment::from_args();
 
     let volume_path = env::var("VOLUME_PATH")
-        .unwrap_or("/tmp/tezedge".to_string())
+        .unwrap_or_else(|_| "/tmp/tezedge".to_string())
         .parse::<PathBuf>()
         .expect("Expected PATH");
 
     if let Some(process_name) = env.process_name {
         prctl::set_name(&process_name)
-            .expect(&format!("Cannot change proces name to {}", process_name));
+            .unwrap_or_else(|_| panic!("Cannot change proces name to {}", process_name));
     }
 
     if env.cpu_load {
@@ -33,7 +33,7 @@ async fn main() {
             // this allows us to test every aspect of the cpu measurements (collective, thread, subprocess)
             cpu_load_sub_process();
             let port = env::var("RPC_PORT")
-                .unwrap_or("18732".to_string())
+                .unwrap_or_else(|_| "18732".to_string())
                 .parse::<u16>()
                 .expect("Expected u16");
             rpc::spawn_rpc_server(port);
@@ -54,7 +54,7 @@ async fn main() {
         // cpu_load_on_threads();
         if !env.disable_rpc_server {
             let port = env::var("RPC_PORT")
-                .unwrap_or("18732".to_string())
+                .unwrap_or_else(|_| "18732".to_string())
                 .parse::<u16>()
                 .expect("Expected u16");
             rpc::spawn_rpc_server(port);
