@@ -133,26 +133,26 @@ pub fn disk_load(disk_load: u64, volume_path: PathBuf) {
             .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &volume_path));
     }
 
-    println!("\tCREATING CONTEXT ACTIONS DB");
-    let context_actions = volume_path.join("bootstrap_db/context_actions");
-    fs::create_dir_all(&context_actions).unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_actions));
+    println!("\tCREATING CONTEXT STATS DB");
+    let context_stats = volume_path.join("context-stats-db");
+    fs::create_dir_all(&context_stats).unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_stats));
 
     let context_file =
-        fs::File::create(context_actions.join("dummy.db")).expect("Failed to create context file");
+        fs::File::create(context_stats.join("dummy.db")).expect("Failed to create context file");
     context_file
         .set_len(disk_load)
         .expect("Failed to set context file length");
 
-    println!("\tCREATING IRMIN CONTEXT DB");
-    let context_irmin = volume_path.join("context");
-    fs::create_dir_all(&context_irmin)
-        .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_irmin));
+    println!("\tCREATING CONTEXT DB");
+    let context_storage = volume_path.join("context");
+    fs::create_dir_all(&context_storage)
+        .unwrap_or_else(|_| panic!("Failed to create directory: {:?}", &context_storage));
 
-    let context_irmin_file = fs::File::create(context_irmin.join("dummy.db"))
-        .expect("Failed to create context_irmin_file");
-    context_irmin_file
+    let context_storage_file = fs::File::create(context_storage.join("dummy.db"))
+        .expect("Failed to create context_storage_file");
+    context_storage_file
         .set_len(disk_load)
-        .expect("Failed to set context_irmin_file length");
+        .expect("Failed to set context_storage_file length");
 
     println!("\tCREATING BLOCK STORAGE DB");
     let block_storage = volume_path.join("bootstrap_db/block_storage");

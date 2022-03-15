@@ -155,9 +155,9 @@ pub async fn test_disk_size(target: u64) {
 
     let res = get_latest_measurement(Duration::from_secs(0)).await;
 
-    if let Some(diks_data) = res[0]["disk"]["contextActions"].as_u64() {
+    if let Some(diks_data) = res[0]["disk"]["contextStats"].as_u64() {
         println!(
-            "\tcontextActions SIZE at: {}MB\n",
+            "\tcontextStats SIZE at: {}MB\n",
             bytes_to_megabytes(diks_data)
         );
         assert!(target + error_margin >= diks_data);
@@ -165,12 +165,12 @@ pub async fn test_disk_size(target: u64) {
 
         println!("=== OK ===\n");
     } else {
-        panic!("Test failed: contextActions data not found in measurements")
+        panic!("Test failed: contextStats data not found in measurements")
     }
 
-    if let Some(diks_data) = res[0]["disk"]["contextIrmin"].as_u64() {
+    if let Some(diks_data) = res[0]["disk"]["contextStorage"].as_u64() {
         println!(
-            "\tcontextIrmin SIZE at: {}MB\n",
+            "\tcontextStorage SIZE at: {}MB\n",
             bytes_to_megabytes(diks_data)
         );
         assert!(target + error_margin >= diks_data);
@@ -178,7 +178,7 @@ pub async fn test_disk_size(target: u64) {
 
         println!("=== OK ===\n");
     } else {
-        panic!("Test failed: contextIrmin data not found in measurements")
+        panic!("Test failed: contextStorage data not found in measurements")
     }
 
     if let Some(diks_data) = res[0]["disk"]["blockStorage"].as_u64() {
